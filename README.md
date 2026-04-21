@@ -67,28 +67,53 @@ npx prettier --check .
 
 Deploy using your preferred CI/CD pipeline. The project is already configured with GitHub Actions to run RSpec, Prettier, and RuboCop upon pushing or creating pull requests to the main branch.
 
-## GitHub
-git remote add origin git@github-meihao::meihaoGit/ai-rubyonrails.git
-git push -u origin main
+## Docker Compose Local Execution Guide
 
+このプロジェクトでは、ローカルのデータベース（PostgreSQL）やKVS（Redis）をDocker Composeで管理しています。以下の手順で操作してください。
 
-① リベースを「ローカル優先」で実行
-「ローカルの内容を正解として、リモート（GitHub側）を強制的に上書きしたい」という状況ですね。
+### 基本的な実行手順
 
-そのエラーは、ローカルとリモートで履歴が分かれてしまい（Divergent branches）、Gitが「どちらを優先して統合すべきか判断できない」と言っている状態です。
+1. **バックグラウンドで起動**
+   ```bash
+   docker-compose up -d
+   ```
+   ※ `-d` オプションによりバックグラウンドで実行されるため、ターミナルが占有されません。
 
-**「ローカル内容優先」**で進めるための最も確実な方法は以下の通りです。
+2. **コンテナの起動状態を確認**
+   ```bash
+   docker-compose ps
+   ```
+   `db` と `redis` の `State` が `Up` になっていることを確認してください。
 
-1. 強制プッシュ（Force Push）
-ローカルの状態が完全に正しく、リモートの内容（他の人のコミットや初期化時のREADMEなど）を消しても良い場合は、強制プッシュを行います。
+3. **データベースの作成・マイグレーション（初回または変更時）**
+   ```bash
+   bin/rails db:prepare
+   ```
 
-Bash
-git push -f origin main
-(※ブランチ名が master の場合は main を master に読み替えてください)
+4. **Railsサーバーを起動**
+   ```bash
+   bin/rails s
+   ```
 
-2. 安全に「ローカル優先」で統合する場合
-「リモートにしかないファイル（GitHub上で作ったREADMEなど）」は残しつつ、中身が競合した場所だけローカルを優先したい場合は、以下の手順を踏みます。
+### 停止・リセット関連のコマンド
 
-① リベースを「ローカル優先」で実行
-Bash
-git pull origin main --rebase -X ours
+- **コンテナの停止（データは保持）**
+  ```bash
+  docker-compose stop
+  ```
+
+- **コンテナの停止・破棄（データは保持）**
+  ```bash
+  docker-compose down
+  ```
+
+- **【警告】コンテナとデータベースのデータを完全にリセット**
+  DBのデータが壊れた場合や、最初から環境を作り直したい場合に実行します（Volumeも削除されます）。
+  ```bash
+  docker-compose down -v
+  ```
+
+- **ログの確認（エラー調査など）**
+  ```bash
+  docker-compose logs -f
+  ```
