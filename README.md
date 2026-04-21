@@ -68,5 +68,27 @@ npx prettier --check .
 Deploy using your preferred CI/CD pipeline. The project is already configured with GitHub Actions to run RSpec, Prettier, and RuboCop upon pushing or creating pull requests to the main branch.
 
 ## GitHub
-git remote add origin git@github-meihao:meihaoGit/ai-rubyonrails.git
+git remote add origin git@github-meihao::meihaoGit/ai-rubyonrails.git
 git push -u origin main
+
+
+① リベースを「ローカル優先」で実行
+「ローカルの内容を正解として、リモート（GitHub側）を強制的に上書きしたい」という状況ですね。
+
+そのエラーは、ローカルとリモートで履歴が分かれてしまい（Divergent branches）、Gitが「どちらを優先して統合すべきか判断できない」と言っている状態です。
+
+**「ローカル内容優先」**で進めるための最も確実な方法は以下の通りです。
+
+1. 強制プッシュ（Force Push）
+ローカルの状態が完全に正しく、リモートの内容（他の人のコミットや初期化時のREADMEなど）を消しても良い場合は、強制プッシュを行います。
+
+Bash
+git push -f origin main
+(※ブランチ名が master の場合は main を master に読み替えてください)
+
+2. 安全に「ローカル優先」で統合する場合
+「リモートにしかないファイル（GitHub上で作ったREADMEなど）」は残しつつ、中身が競合した場所だけローカルを優先したい場合は、以下の手順を踏みます。
+
+① リベースを「ローカル優先」で実行
+Bash
+git pull origin main --rebase -X ours
