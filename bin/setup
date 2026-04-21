@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+# Exit if any command fails
+set -e
+
+echo "==> Setting up AI Ruby on Rails project..."
+
+# Check if Docker is running
+if ! docker info > /dev/null 2>&1; then
+  echo "Error: Docker is not running. Please start Docker and try again."
+  exit 1
+fi
+
+echo "==> Starting Docker containers..."
+docker-compose up -d
+
+echo "==> Installing Ruby dependencies..."
+bundle check || bundle install
+
+# Install Node dependencies if package.json exists
+if [ -f "package.json" ]; then
+  echo "==> Installing Node dependencies..."
+  yarn install || npm install
+fi
+
+echo "==> Preparing the database..."
+bundle exec rails db:prepare
+
+# Ensure seeds are loaded
+echo "==> Loading seed data..."
+bundle exec rails db:seed
+
+echo "==> Removing old logs and tempfiles..."
+bundle exec rails log:clear tmp:clear
+
+echo "==> Setup completed successfully! You can now start the server with: bin/rails s"
